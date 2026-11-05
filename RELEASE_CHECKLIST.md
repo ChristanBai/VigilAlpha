@@ -5,8 +5,8 @@
 - [x] Trading 212 browser is authenticated in Practice mode; the observed account has no holdings, so no portfolio or holding decision is claimed.
 - [x] Practice verification remains read-only: no simulated order, account reset or broker setting change was performed.
 - [x] Release builder includes the macOS installer, all dev.18 research modules, third-party licenses and an internal file checksum manifest.
-- [ ] Exact committed clean clone and independently extracted release archive repeat all checks.
-- [ ] Current tree and reachable Git history pass privacy/secret review.
+- [x] Exact committed clean clone and independently extracted release archive repeat all checks.
+- [x] Current tree and reachable Git history pass bounded private-path, private-key and credential-pattern review.
 - [ ] Hosted CI passes on the published commit.
 - [ ] GitHub prerelease contains the ZIP and SHA-256 asset; independent download, checksum and startup pass.
 - [ ] Current Codex desktop process reports dev.18 after installing the published asset.
