@@ -8,6 +8,7 @@
 - Include experiment instructions and third-party licenses; model weights and private research inputs remain outside the package.
 - Align package, plugin, MCP server and setup-status versions through one checked runtime constant.
 - Add a checksum-verifying macOS installer and publish the complete research components in the release archive.
+- Make the installer replace an older local `vigilalpha` marketplace source and restore it if the remaining update fails.
 
 ## 0.1.0-dev.17 — 2026-11-02 (local candidate)
 

@@ -5,9 +5,20 @@ umask 077
 # Use a permanent release copy: removing Downloads must not break the plugin.
 release_root="$(cd "$(dirname "$0")" && pwd)"
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+previous_marketplace_source=""
+marketplace_replaced=0
 
 fail() { printf '\n安装未完成：%s\n' "$1" >&2; exit 1; }
-trap 'printf "\n安装中止。已有账户数据和钥匙串未由此脚本修改。请保留终端中的错误信息。\n" >&2' ERR
+on_error() {
+  set +e
+  if [[ "$marketplace_replaced" == "1" && -n "$previous_marketplace_source" ]]; then
+    codex plugin marketplace remove vigilalpha >/dev/null 2>&1
+    codex plugin marketplace add "$previous_marketplace_source" >/dev/null 2>&1
+    printf '\n已尝试恢复原 VigilAlpha marketplace：%s\n' "$previous_marketplace_source" >&2
+  fi
+  printf '\n安装中止。已有账户数据和钥匙串未由此脚本修改。请保留终端中的错误信息。\n' >&2
+}
+trap on_error ERR
 
 [[ "$(uname -s)" == "Darwin" ]] || fail '必须在你的 Mac 上运行；云端 Linux 不能代替 Mac 安装。'
 command -v node >/dev/null || fail '缺少 Node.js 22 或更新版本。'
@@ -35,7 +46,23 @@ fi
 
 printf '正在验证 dev.18 并注册本地插件……\n'
 (cd "$release_destination/plugins/vesper-codex" && npm run check && npm test)
-codex plugin marketplace add "$release_destination"
+marketplace_list="$(mktemp "${TMPDIR:-/tmp}/vigilalpha-marketplaces-XXXXXX")"
+codex plugin marketplace list --json > "$marketplace_list"
+previous_marketplace_source="$(node --input-type=module - "$marketplace_list" <<'NODE'
+import { readFileSync } from 'node:fs';
+const data = JSON.parse(readFileSync(process.argv[2], 'utf8'));
+const existing = data.marketplaces?.find(item => item.name === 'vigilalpha');
+process.stdout.write(existing?.marketplaceSource?.source || existing?.root || '');
+NODE
+)"
+rm -f "$marketplace_list"
+if [[ -n "$previous_marketplace_source" && "$previous_marketplace_source" != "$release_destination" ]]; then
+  marketplace_replaced=1
+  codex plugin marketplace remove vigilalpha --json >/dev/null
+fi
+if [[ "$previous_marketplace_source" != "$release_destination" ]]; then
+  codex plugin marketplace add "$release_destination"
+fi
 install_receipt="$(mktemp "${TMPDIR:-/tmp}/vigilalpha-install-XXXXXX")"
 codex plugin add vigilalpha-codex@vigilalpha --json > "$install_receipt"
 node --input-type=module - "$install_receipt" "$release_destination/plugins/vesper-codex" <<'NODE'
@@ -60,6 +87,7 @@ verify();
 console.log(`已核验插件文件：${receipt.installedPath}`);
 NODE
 rm -f "$install_receipt"
+marketplace_replaced=0
 codex plugin list
 
 printf '\n安装命令执行完成，源版本：%s\n位置：%s\n' "$release_version" "$release_destination"
