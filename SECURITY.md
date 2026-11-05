@@ -15,9 +15,11 @@ The Terminal setup command exists only as a compatibility fallback during develo
 
 ## Local data
 
-Configuration, normalized cache and derived snapshots stay on the Mac. VigilAlpha repairs its state
+In local mode, configuration, normalized cache and derived snapshots stay on the host running VigilAlpha. VigilAlpha repairs its state
 directories to mode `0700` and private data files to mode `0600`. Cloud sync and telemetry are
-disabled. Upstream API response bodies are not copied into error messages.
+disabled by default. If an optional cloud transport is explicitly configured, derived data may leave
+the host; review its payload and destination separately. These controls reduce exposure but do not
+prove absolute security or verify the user's Mac deployment. Upstream API response bodies are not copied into error messages.
 
 ## Read-only boundary
 

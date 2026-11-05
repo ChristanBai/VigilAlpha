@@ -7,7 +7,16 @@ import { T212Client } from "../core/t212-client.mjs";
 import { DashboardManager } from "../dashboard/server.mjs";
 import { buildPortfolioBrief } from "../analysis/portfolio-brief.mjs";
 import { calculateTradeReview, createRuntime, tradeMarkers } from "../runtime.mjs";
+import { PRODUCT_VERSION } from "../version.mjs";
 import { decisionReview, holdingReview, learningReview, marketReview, portfolioReview, strategyReview } from "../vigilalpha/reviews.mjs";
+import { calculateHypotheticalProfit } from "../vigilalpha/decision-sheet.mjs";
+import { freezeForwardProtocol, checkObservationAvailability } from "../vigilalpha/forward-protocol.mjs";
+import { replayShadowLedger } from "../vigilalpha/shadow-ledger.mjs";
+import { replaySignalLedger } from "../vigilalpha/signal-ledger.mjs";
+import { runResearchValidation } from "../vigilalpha/research-run.mjs";
+import { runInvestCandidateResearch } from "../vigilalpha/invest-candidate.mjs";
+import { reviewSecCompanyFacts } from "../vigilalpha/company-evidence.mjs";
+import { experimentalKronosForecast } from "../vigilalpha/kronos-adapter.mjs";
 import { eventReview } from "../vigilalpha/events.mjs";
 import { researchNotebook } from "../vigilalpha/research-notebook.mjs";
 import { HOLDING_CHART_UI_URI, PORTFOLIO_FLOW_UI_URI, RISK_TIMELINE_UI_URI, SETUP_UI_URI } from "../vigilalpha/inline-ui.mjs";
@@ -33,6 +42,20 @@ export function createToolRuntime({ env = process.env } = {}) {
   return {
     definitions: TOOL_DEFINITIONS,
     async call(name, args = {}) {
+      if (name === "company_quality_evidence") return reviewSecCompanyFacts(args);
+      if (name === "experimental_kronos_forecast") return experimentalKronosForecast(args, { env });
+      if (name === "validate_invest_candidate") return runInvestCandidateResearch(args.dataset, args);
+      if (name === "validate_research_dataset") return runResearchValidation(args.dataset, args);
+      if (name === "research_signal_ledger") return replaySignalLedger(args);
+      if (name === "replay_hypothetical_ledger") return replayHypotheticalLedger(args);
+      if (name === "prepare_forward_research_plan") return freezeForwardProtocol(args);
+      if (name === "check_research_observation") return checkObservationAvailability(args);
+      if (name === "hypothetical_trade_scenario") {
+        const { baseCurrency, quoteCurrency, ...scenario } = args;
+        if (![baseCurrency, quoteCurrency].every((currency) => typeof currency === "string" && /^[A-Z]{3}$/.test(currency))) throw new Error("Explicit three-letter base and quote currencies are required.");
+        if (baseCurrency === quoteCurrency && (scenario.entryBasePerQuote !== 1 || scenario.exitBasePerQuote !== 1)) throw new Error("Same-currency FX rates must equal 1.");
+        return { ...calculateHypotheticalProfit(scenario), baseCurrency, quoteCurrency };
+      }
       if (name === "event_review") return eventReview(args);
       if (name === "research_notebook") return researchNotebook();
       if (name === "configure_credentials") {
@@ -104,7 +127,66 @@ export function createToolRuntime({ env = process.env } = {}) {
 
 const LEGACY_TOOL_NAMES = new Set(["setup", "start_vesper", "holdings", "pies", "trades", "quote", "history", "dashboard", "news", "analysis", "backtest", "report", "daily_brief", "order_history"]);
 
+function replayHypotheticalLedger(args) {
+  const { baseCurrency, fills, marks } = args;
+  if (!Array.isArray(fills) || !Array.isArray(marks)) throw new Error("Explicit fills and marks arrays are required.");
+  if (fills.length > 1000 || marks.length > 1000) throw new Error("At most 1000 fills and 1000 marks may be supplied.");
+  const currencyByInstrument = new Map();
+  for (const record of [...fills, ...marks]) {
+    if (!record || typeof record !== "object" || typeof record.quoteCurrency !== "string" || !/^[A-Z]{3}$/.test(record.quoteCurrency)) throw new Error("Explicit three-letter quote currency is required for each fill and mark.");
+    if (record.quoteCurrency === baseCurrency && record.basePerQuote !== 1) throw new Error("Same-currency FX rates must equal 1.");
+    if (currencyByInstrument.has(record.instrumentId) && currencyByInstrument.get(record.instrumentId) !== record.quoteCurrency) throw new Error("Inconsistent quote currency for instrument.");
+    currencyByInstrument.set(record.instrumentId, record.quoteCurrency);
+  }
+  return { ...replayShadowLedger(args), executionAuthority: "NONE", verification: "UNVALIDATED_ASSUMPTIONS_ONLY" };
+}
+
 export const TOOL_DEFINITIONS = [
+  tool("company_quality_evidence", "Calculate sourced annual company metrics", "Offline SEC CompanyFacts input: annual gross profit, free cash flow and margins. Preserves filing dates, concepts and sources; rejects future, mismatched or missing facts. Not a valuation or recommendation.", {
+    type: "object", properties: { companyFacts: { type: "object", additionalProperties: true }, periodEnd: { type: "string" }, asOf: { type: "string" } }, required: ["companyFacts", "periodEnd", "asOf"], additionalProperties: false
+  }, true),
+  tool("experimental_kronos_forecast", "Run an optional local Kronos experiment", "Experimental local-only CPU forecast using preinstalled models. No downloads, broker connection or orders. Requires configured optional Python runtime/model paths. Output paths are not calibrated probabilities; this does not validate profitability.", {
+    type: "object", properties: { instrumentId: { type: "string" }, bars: { type: "array", minItems: 32, maxItems: 512, items: { type: "object", additionalProperties: true } }, futureSessions: { type: "array", minItems: 1, maxItems: 20, items: { type: "string" } }, seed: { type: "integer", minimum: 0, maximum: 4294967295 }, sampleCount: { type: "integer", minimum: 1, maximum: 10 } }, required: ["instrumentId", "bars", "futureSessions"], additionalProperties: false
+  }, true),
+  tool("validate_invest_candidate", "Evaluate a fixed Invest monthly trend candidate", "Offline research only. Ten-month month-end trend, next-session open, long ETF or cash, same-window buy-and-hold and doubled-cost stress. Requires sourced data, reviewed calendar, ETF eligibility and explicit evaluation start. No orders or automatic promotion. Corporate actions block computation. A historical screen pass is not evidence of future profitability. See docs/INVEST_PRACTICE.md.", {
+    type: "object", properties: { dataset: { type: "object", additionalProperties: true }, initialCash: { type: "number", exclusiveMinimum: 0 }, costBps: { type: "number", minimum: 0, exclusiveMaximum: 5000 }, evaluationStart: { type: "string" } }, required: ["dataset", "initialCash", "costBps", "evaluationStart"], additionalProperties: false
+  }, true),
+  tool("validate_research_dataset", "Validate sourced research data and all fixed rules", "Offline research: inspect caller-supplied identity, source, rights, timing and corporate-action declarations, then replay all three fixed rules with same-window cost-bearing benchmarks. Missing evidence blocks computation. Declarations are not independently verified; no orders, real-time data, profit validation or automatic promotion. See docs/RESEARCH_VALIDATION.md for dataset contract.", {
+    type: "object", properties: { dataset: { type: "object", additionalProperties: true }, initialCash: { type: "number", exclusiveMinimum: 0 }, costBps: { type: "number", minimum: 0, exclusiveMaximum: 10000 } }, required: ["dataset", "initialCash", "costBps"], additionalProperties: false
+  }, true),
+  tool("research_signal_ledger", "Replay a hypothetical strategy to ledger", "Offline synthetic research only: generate fixed-rule close signals, next-bar open hypothetical fills and a base-currency ledger from explicitly supplied time-stamped OHLCV and FX data. No broker, real account data, execution, verified data, market calendar, dividends, prospective verification or profit guarantee. costBps is an explicit assumed per-side fee; avoid counting slippage twice.", {
+    type: "object", properties: {
+      patternId: { type: "string", enum: ["sma-trend-cross", "rsi-momentum", "volume-breakout-20"] }, instrumentId: { type: "string" }, baseCurrency: { type: "string", pattern: "^[A-Z]{3}$" }, quoteCurrency: { type: "string", pattern: "^[A-Z]{3}$" }, initialCash: { type: "number", exclusiveMinimum: 0 }, costBps: { type: "number", minimum: 0, exclusiveMaximum: 10000 },
+      bars: { type: "array", maxItems: 3000, items: { type: "object", properties: { openTime: { type: "string" }, closeTime: { type: "string" }, availableAt: { type: "string" }, openFxAvailableAt: { type: "string" }, closeFxAvailableAt: { type: "string" }, open: { type: "number" }, close: { type: "number" }, high: { type: "number" }, volume: { type: "number" }, openFx: { type: "number" }, closeFx: { type: "number" } }, required: ["openTime", "closeTime", "availableAt", "openFxAvailableAt", "closeFxAvailableAt", "open", "close", "openFx", "closeFx"], additionalProperties: false } }
+    }, required: ["patternId", "instrumentId", "baseCurrency", "quoteCurrency", "initialCash", "costBps", "bars"], additionalProperties: false
+  }, true),
+  tool("replay_hypothetical_ledger", "Replay hypothetical fills", "Offline research only: calculate cash, positions and P&L for explicit hypothetical fills and marks. No brokerage access, validated strategy, real ledger, price freshness check, trade execution or guarantee. Rates are base per quote, fees in base; prices include assumed slippage. No dividends, corporate actions or external cash flows; results use floating point and cannot reconcile real accounts.", {
+    type: "object", properties: {
+      baseCurrency: { type: "string", pattern: "^[A-Z]{3}$" }, initialCash: { type: "number", minimum: 0 },
+      fills: { type: "array", maxItems: 1000, items: { type: "object", properties: {
+        id: { type: "string" }, instrumentId: { type: "string" }, quoteCurrency: { type: "string", pattern: "^[A-Z]{3}$" }, side: { type: "string", enum: ["BUY", "SELL"] }, quantity: { type: "number", exclusiveMinimum: 0 }, price: { type: "number", exclusiveMinimum: 0 }, basePerQuote: { type: "number", exclusiveMinimum: 0 }, feesBase: { type: "number", minimum: 0 }, signalTime: { type: "string" }, fillTime: { type: "string" }
+      }, required: ["id", "instrumentId", "quoteCurrency", "side", "quantity", "price", "basePerQuote", "feesBase", "signalTime", "fillTime"], additionalProperties: false } },
+      marks: { type: "array", maxItems: 1000, items: { type: "object", properties: { instrumentId: { type: "string" }, quoteCurrency: { type: "string", pattern: "^[A-Z]{3}$" }, price: { type: "number", exclusiveMinimum: 0 }, basePerQuote: { type: "number", exclusiveMinimum: 0 }, time: { type: "string" } }, required: ["instrumentId", "quoteCurrency", "price", "basePerQuote", "time"], additionalProperties: false } }
+    }, required: ["baseCurrency", "initialCash", "fills", "marks"], additionalProperties: false
+  }, true),
+  tool("prepare_forward_research_plan", "Prepare a prospective research plan", "Create an offline PLAN_ONLY protocol and digest from user-supplied assumptions. Does not store or independently timestamp the plan, start validation, authorize trading or establish profitability.", {
+    type: "object", properties: {
+      frozenAt: { type: "string" }, startsAt: { type: "string" }, instrumentId: { type: "string" }, quoteCurrency: { type: "string" }, baseCurrency: { type: "string" }, dataSource: { type: "string" }, adjustmentPolicy: { type: "string" },
+      costs: { type: "object", properties: { commissionBps: { type: "number", minimum: 0 }, spreadAndSlippageBps: { type: "number", minimum: 0 }, fxFeeBps: { type: "number", minimum: 0 }, taxesBps: { type: "number", minimum: 0 }, fxApplied: { type: "boolean" } }, required: ["commissionBps", "spreadAndSlippageBps", "fxFeeBps", "taxesBps", "fxApplied"], additionalProperties: false }
+    }, required: ["frozenAt", "startsAt", "instrumentId", "quoteCurrency", "baseCurrency", "dataSource", "adjustmentPolicy", "costs"], additionalProperties: false
+  }, true),
+  tool("check_research_observation", "Check information timing", "Check user-supplied observation, publication and signal times against a prospective plan. Does not verify the timestamps or establish strategy validity.", {
+    type: "object", properties: { observationAt: { type: "string" }, availableAt: { type: "string" }, signalAt: { type: "string" }, frozenAt: { type: "string" }, startsAt: { type: "string" } }, required: ["observationAt", "availableAt", "signalAt", "frozenAt", "startsAt"], additionalProperties: false
+  }, true),
+  tool("hypothetical_trade_scenario", "Calculate a hypothetical trade outcome", "Calculate a hypothetical long-position target, stop and break-even from explicitly supplied assumptions. Offline only: no account lookup, orders, prediction, persisted learning or guarantee. Rates are units of base currency per unit of quote currency. Fees are base-currency amounts per side; include applicable taxes, and do not double-count spread or slippage already in prices. Exit FX is shared by both scenarios. Optional entryFeeBps and exitFeeBps apply proportionally to each scenario notional, in addition to fixed fees; do not duplicate charges.", {
+    type: "object", properties: {
+      baseCurrency: { type: "string", pattern: "^[A-Z]{3}$" }, quoteCurrency: { type: "string", pattern: "^[A-Z]{3}$" },
+      quantity: { type: "number", exclusiveMinimum: 0 }, entryPrice: { type: "number", exclusiveMinimum: 0 }, targetPrice: { type: "number", exclusiveMinimum: 0 }, stopPrice: { type: "number", exclusiveMinimum: 0 },
+      entryBasePerQuote: { type: "number", exclusiveMinimum: 0 }, exitBasePerQuote: { type: "number", exclusiveMinimum: 0 },
+      entryFeesBase: { type: "number", minimum: 0 }, exitFeesBase: { type: "number", minimum: 0 },
+      entryFeeBps: { type: "number", minimum: 0, exclusiveMaximum: 10000 }, exitFeeBps: { type: "number", minimum: 0, exclusiveMaximum: 10000 }
+    }, required: ["baseCurrency", "quoteCurrency", "quantity", "entryPrice", "targetPrice", "stopPrice", "entryBasePerQuote", "exitBasePerQuote", "entryFeesBase", "exitFeesBase"], additionalProperties: false
+  }, true),
   tool("research_notebook", "Open the VigilAlpha strategy research notebook", "Read the account-free candidate/source registry, validation gaps and local Markdown export command. No credentials, network, automatic learning or strategy promotion. Notebook edits never change runtime parameters.", {
     type: "object", properties: {}, additionalProperties: false
   }, true),
@@ -274,7 +356,7 @@ export const TOOL_DEFINITIONS = [
     required: ["symbol"],
     additionalProperties: false
   }, true),
-  tool("backtest", "Backtest a strategy", "Use this to run a long-only SMA crossover backtest with hypothetical return, drawdown and trade count.", {
+  tool("backtest", "Backtest a strategy", "Diagnostic only: this legacy SMA crossover uses same-close signals and fills and excludes all costs. It is not execution-realistic, evidence of profitability, or a trading decision.", {
     type: "object",
     properties: {
       symbol: { type: "string" },
@@ -338,7 +420,7 @@ async function setupStatusTool(service, snapshotStore) {
   const [status, localData] = await Promise.all([service.status(), snapshotStore.status()]);
   return {
     product: "VigilAlpha",
-    version: "0.1.0-dev.16",
+    version: PRODUCT_VERSION,
     configured: status.credentials.configured,
     credentialSource: status.credentials.source,
     accountVerifiedAt: status.config.accountVerifiedAt,

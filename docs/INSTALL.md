@@ -9,9 +9,26 @@
 
 ## Install the plugin
 
+For the dev.18 release ZIP, extract it on the target Mac and run
+`Install-on-Mac.command` (or `bash /path/to/Install-on-Mac.command` from Terminal).
+The installer requires an existing Node.js 22+ and a Codex CLI with plugin support.
+It verifies the packaged files, copies the release into
+`~/Library/Application Support/VigilAlpha/releases/`, runs the checks, and calls
+the CLI marketplace and plugin installation commands. Previous release directories
+are retained. It does not update your source checkout or handle account credentials.
+If a CLI command fails, installation is incomplete; retain the error output.
+Verify the plugin list, restart the desktop app, and check the loaded version in a
+new task. Preparing a ZIP on another computer is not installation on your Mac.
+
+The plugin remains read-only. Practice orders require a separately connected,
+authenticated broker UI or a separately implemented Demo execution adapter.
+Kronos weights and its Python runtime are not included in the ZIP.
+
+For a source checkout:
+
 ```bash
 git clone https://github.com/ChristanBai/VigilAlpha.git
-cd Vesper
+cd VigilAlpha
 codex plugin marketplace add "$PWD"
 codex plugin add vigilalpha-codex@vigilalpha
 ```

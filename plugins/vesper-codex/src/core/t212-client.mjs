@@ -90,6 +90,12 @@ export class T212Client {
     if (method !== "GET") {
       throw new T212Error("Vesper is read-only; Trading 212 write requests are disabled.");
     }
+    url = new URL(url);
+    const allowed = new URL(BASE_URLS[this.environment]);
+    if (url.origin !== allowed.origin || url.username || url.password ||
+        !url.pathname.startsWith(`${allowed.pathname}/`)) {
+      throw new T212Error("Trading 212 request destination is not an allowed API endpoint.");
+    }
     const now = Date.now();
     const throttleKey = `${method}:${url.origin}${url.pathname}`;
     const minimumIntervalMs = Number.isFinite(this.minimumIntervalMs)
@@ -105,6 +111,7 @@ export class T212Client {
       response = await this.fetchImpl(url, {
         ...options,
         method,
+        redirect: "error",
         signal: options.signal || AbortSignal.timeout(this.timeoutMs),
         headers: {
           Authorization: this.auth,

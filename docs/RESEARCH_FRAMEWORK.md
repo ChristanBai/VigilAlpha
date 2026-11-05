@@ -110,3 +110,45 @@ Results are historical diagnostics, never automatic strategy approval. Plain sum
 adjustment, point-in-time evidence, transaction costs and prospective validation.
 
 首轮本地冻结研究保留9项日线结果与9项MAX周期不符弃权；不把月线改名为日线。历史回放不计入前瞻观察天数。
+
+## Invest-only research candidate: monthly trend / 2026-11-02
+
+Source checked: [Faber, author explanation](https://mebfaber.com/2016/09/14/episode-20-listener-qa/)
+and [author's research update](https://mebfaber.com/2009/02/19/a-quantitative-approach-to-tactical-asset-allocation-updated/).
+Read depth: author summaries; SSRN retrieval returned 403. No independent replication or licensed price data obtained.
+The source describes monthly evaluation of a ten-month simple moving average. This is a new candidate,
+not evidence for the existing daily SMA or RSI implementations.
+
+Proposed adaptation (NOT_RUN, not activated): select a fixed eligible unlevered broad equity ETF by ISIN
+before retrieving test results; use the latest ten completed monthly total-return observations;
+above the ten-month mean -> hypothetical long, below or equal -> hypothetical cash. At least ten
+completed months required. Evaluate only at month end; execute no earlier than the next regular-session
+open after the signal data is available. Unchanged position -> no turnover. Equality-to-cash and
+next-session execution are our explicit choices, not claims about exact paper replication.
+
+Require unadjusted execution prices, dividends/corporate actions and point-in-time signal series; never
+execute at a retrospectively adjusted price. The current action-free replay cannot validate this
+multi-year design until dividend/action support exists. Do not rename monthly observations as daily.
+Compare with the same ETF buy-and-hold over identical dates, initial cash, FX and fees. State cash-interest
+assumptions separately; zero-interest cash and broker-interest cash are distinct variants. Freeze
+chronological untouched test dates and instrument before evaluation; record all attempted variants.
+Report net return, benchmark difference, drawdown, turnover, exposure, losing periods and cost sensitivity.
+Sideways whipsaws, delayed re-entry and missing sharp rebounds are explicit counter-hypotheses.
+No return threshold, risk tolerance or real allocation is inferred from this candidate.
+
+## Broker evidence / checked 2026-11-02
+
+- [Invest fees](https://helpcentre.trading212.com/hc/en-us/articles/11471996799517-What-are-the-fees-in-the-Invest-ISAs-and-SIPP): FX 0.15%, commission/custody zero; applicable taxes and other charges remain separate.
+- [Currency selection](https://helpcentre.trading212.com/hc/en-us/articles/34159237080861-Can-I-choose-the-currency-in-which-to-buy-sell-assets-for-Invest-accounts): asset-currency direct trades avoid trade conversion; Pies use primary currency, so foreign-currency assets still convert. Initial conversion is not free.
+- [UK Invest terms](https://www.trading212.com/legal-documentation/uk/invest/Invest-Terms_EN.pdf), clause 5.1: restricts Algorithmic Trading and specified commercial services. This is UK documentation, not confirmation of this user's contracting entity.
+- [Official API documentation](https://docs.trading212.com/api/accounts) describes order endpoints and primary-currency execution. Technical endpoint availability does not resolve contractual permission. Keep execution disabled; entity/terms applicability and commercial distribution rights remain unverified.
+
+## Recorded product preferences / 2026-11-02
+
+Confirmed: prioritize Trading 212 Invest over CFD, investment research and after-cost verification;
+retain the existing VigilAlpha code root; protect core source from public publication; report progress
+in conversation without a separate project board; no real orders or account-setting changes.
+Long-term investing is a recorded research orientation, not a numeric holding-period commitment.
+Exact horizon, acceptable drawdown, capital budget and risk tolerance remain unspecified. Low-turnover
+monthly trend is a proposed research choice, not a user-approved live strategy. Do not promise profits
+or absolute security. GitHub publishing remains paused.

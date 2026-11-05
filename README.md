@@ -8,7 +8,12 @@ VigilAlpha is a local-first, strictly read-only Trading 212 risk-review plugin f
 account facts, transaction markers, data-quality checks, strategy evidence and conditional risk
 decisions into one conversation. It cannot place, change or cancel an order.
 
-Current development version: `0.1.0-dev.16` · License: MIT · Platform: macOS first
+Current development prerelease: `0.1.0-dev.18` · License: MIT · Platform: macOS first
+
+Long-term goal: connect evidence-based opportunity research, account-aware decisions, verified
+execution and after-cost outcome review, with controlled automation and data protection. This
+release's read-only interface is a development boundary, not the complete product ambition.
+See [product goals](docs/PRODUCT_GOALS.md) and [dev.18 installation](docs/INSTALL_DEV18_ZH.md).
 
 > Development prerelease: conditional research is experimental and account/UI acceptance is still
 > incomplete. Public `v1.0` and plugin-directory approval remain separate gates. No strategy here
@@ -99,7 +104,7 @@ Restart Codex and open a new conversation. Select `VigilAlpha` under `+` → Mor
 setup card. Never paste an API key or secret into chat.
 
 Download the development ZIP and checksum from the
-[dev.16 prerelease](https://github.com/ChristanBai/VigilAlpha/releases/tag/v0.1.0-dev.16).
+[dev.18 prerelease](https://github.com/ChristanBai/VigilAlpha/releases/tag/v0.1.0-dev.18).
 See [the installation guide](docs/INSTALL.md) for permissions, setup and verification.
 
 ## Public tools
@@ -152,7 +157,7 @@ Build the same installable archive used by CI:
 
 ```bash
 ./scripts/build-release.sh
-(cd dist && shasum -a 256 -c vigilalpha-codex-0.1.0-dev.16.zip.sha256)
+(cd dist && shasum -a 256 -c vigilalpha-codex-0.1.0-dev.18.zip.sha256)
 ```
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md) and the current

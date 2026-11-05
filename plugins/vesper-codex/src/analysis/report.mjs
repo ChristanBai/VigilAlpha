@@ -42,6 +42,7 @@ export function buildResearchReport({
     lines.push(
       "## Backtest",
       "",
+      `- ${backtest.disclaimer}`,
       `- Strategy: ${backtest.strategy}`,
       `- Total return: ${formatPercent(backtest.totalReturn)}`,
       `- Maximum drawdown: ${formatPercent(backtest.maxDrawdown)}`,

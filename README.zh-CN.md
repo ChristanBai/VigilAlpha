@@ -1,14 +1,16 @@
 # VigilAlpha
 
-[English](README.md) · **简体中文** · [下载 dev.16](https://github.com/ChristanBai/VigilAlpha/releases/tag/v0.1.0-dev.16)
+[English](README.md) · **简体中文** · [dev.18 安装说明](docs/INSTALL_DEV18_ZH.md)
 
 ![VigilAlpha](plugins/vesper-codex/assets/app-icon.svg)
 
 在 Codex 中连接 Trading 212，把持仓事实、价格图表、已知事件和研究条件放进同一条决策路径。
 先看组合里哪里需要关注，再研究单只股票的证据、进入条件和失效条件。
 
-当前版本 `0.1.0-dev.16` 是公开开发预发布版，适合体验与研究反馈。它不能下单，也不保证盈利。
+当前开发预发布版本为 `0.1.0-dev.18`。它不能下单，也不保证盈利。
 软件发布、客户使用路径验收与策略有效性分别核验；完整浏览器侧栏路径仍未验收。
+
+**长期目标：**帮助用户发现机会、形成有证据的决策，通过模拟、对账与复盘验证扣费后收益，逐步建设受约束的交易自动执行，并保护数据安全。详见[长期产品目标与当前能力边界](docs/PRODUCT_GOALS.md)。
 
 ## 一条连贯的研究路径
 
@@ -54,6 +56,8 @@ flowchart LR
 | Yahoo / BBC / Apple News / Longbridge | 可作为有链接和日期的人工研究材料 | 未提供上述全部平台的自动连接或商业数据授权 |
 
 ## 安装与一次配置
+
+本次 dev.18 更新请使用完整发布 ZIP，按[中文安装步骤](docs/INSTALL_DEV18_ZH.md)运行安装入口。下面的 GitHub 克隆方式用于源码开发；安装验收仍须核对实际加载版本。
 
 要求：macOS 14+、Node.js 22+、支持插件的 Codex。公共股票研究不需要账户密钥；
 账户分析需要 Trading 212 Invest／Stocks ISA 只读 API 权限。

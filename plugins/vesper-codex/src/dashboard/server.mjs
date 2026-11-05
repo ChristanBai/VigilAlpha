@@ -83,6 +83,11 @@ export class DashboardManager {
 
   async handle(request, response) {
     const url = new URL(request.url, "http://localhost");
+    // Cloud sync contains private account data. Static assets are public, but
+    // every API endpoint, including event streams, must fail closed.
+    if ((this.env.VESPER_MODE || "local") === "cloud" && url.pathname.startsWith("/api/") && !this.authorized(request)) {
+      return sendJson(response, 401, { error: "Unauthorized" });
+    }
     if (request.method === "GET" && url.pathname === "/") {
       return sendFile(response, "index.html", "text/html; charset=utf-8");
     }

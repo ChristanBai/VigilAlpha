@@ -11,6 +11,7 @@ import {
 import { PortfolioSyncService } from "./core/sync-service.mjs";
 import { T212Client } from "./core/t212-client.mjs";
 import { MarketService } from "./market/market-service.mjs";
+import { PRODUCT_VERSION } from "./version.mjs";
 
 export async function createRuntime(env = process.env) {
   const config = await readConfig(env);
@@ -42,7 +43,7 @@ export async function createRuntime(env = process.env) {
     async status() {
       return {
         plugin: "vigilalpha-codex",
-        version: "0.1.0-dev.16",
+        version: PRODUCT_VERSION,
         credentials,
         config: publicConfig(config),
         dataSources: {

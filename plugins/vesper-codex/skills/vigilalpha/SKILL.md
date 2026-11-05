@@ -39,6 +39,14 @@ review. It is not a profit promise, price oracle or trading executor.
     set includeChart only when a chart is needed. Do not fetch a private account for this path.
     Verify the host can access the page before claiming to have read it. A ChatGPT side panel
     alone does not grant page access or connect this local stdio server.
+13. For an explicitly hypothetical trade calculation use `hypothetical_trade_scenario`. Ask for
+    missing prices, FX rates and per-side costs rather than inventing values. Report currencies and
+    assumptions; target and stop are hypothetical, not forecasts or guaranteed fills. This offline
+    calculator neither reads the account nor submits orders or records decisions.
+14. For an explicitly hypothetical multi-fill ledger use `replay_hypothetical_ledger`; require
+    all prices, times, currencies, FX, marks and fees as assumptions. Never use it as a broker
+    reconciliation or proof of strategy profitability. Tell the user it omits dividends, external
+    cash flows, corporate actions, reliable quote freshness and financial-grade precision.
 
 ConditionalResearch describes three executable experimental rules and their failure conditions.
 Its markers are research candidates, not broker executions; zero production weight remains.

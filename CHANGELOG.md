@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.1.0-dev.18 — 2026-11-06
+
+- Port sourced annual gross-profit/free-cash-flow calculations with filing-time and period checks.
+- Add optional pinned local Kronos model inference through MCP; no broker writes or automatic downloads.
+- Preserve exploratory four-window historical results and data-quality blockers; no profitability claim.
+- Include experiment instructions and third-party licenses; model weights and private research inputs remain outside the package.
+- Align package, plugin, MCP server and setup-status versions through one checked runtime constant.
+- Add a checksum-verifying macOS installer and publish the complete research components in the release archive.
+
+## 0.1.0-dev.17 — 2026-11-02 (local candidate)
+
+- Add read-only Trading 212 CSV reconstruction using decimal arithmetic, separate currencies, ISIN holdings, dividend shares and explicit reconciliation gaps.
+- Gate research datasets on declared stable identity, provenance, rights, OHLCV/FX timing and corporate-action policy; declarations are not independently verified.
+- Run all three fixed strategies through the signal ledger with per-rule same-window, same-cost buy-and-hold and cash comparisons; preserve abstentions and losses.
+- Expose the gated runner through MCP and local CLI. No execution or automatic strategy promotion; profitability remains unestablished.
+- Includes prior local candidate work on hypothetical scenarios, frozen research plans, cloud authentication and HTTPS-only synchronization defaults.
+- Local candidate only: Mac installation, continuous licensed data and prospective validation remain outstanding. GitHub publication is paused.
+
 ## 0.1.0-dev.16 — 2026-10-25
 
 ### 中文

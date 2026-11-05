@@ -1,8 +1,9 @@
 import { createToolRuntime } from "./tools.mjs";
 import { listInlineResources, readInlineResource, readVisualizationResource } from "../vigilalpha/inline-ui.mjs";
+import { PRODUCT_VERSION } from "../version.mjs";
 
 const PROTOCOL_VERSION = "2025-06-18";
-const SERVER_VERSION = "0.1.0-dev.16";
+const SERVER_VERSION = PRODUCT_VERSION;
 
 export async function runStdioServer({ env = process.env } = {}) {
   const toolRuntime = createToolRuntime({ env });
@@ -118,6 +119,8 @@ async function handleMessage(raw, toolRuntime) {
 }
 
 function summarize(name, data) {
+  if (name === "replay_hypothetical_ledger") return `Hypothetical ledger only (${data.baseCurrency}): NAV ${data.netAssetValue}; P&L ${data.netPnl}; no broker reconciliation, orders or validated strategy.`;
+  if (name === "hypothetical_trade_scenario") return `Hypothetical scenario only (${data.baseCurrency}): target P&L ${data.profitAtTarget}; stop P&L ${data.profitAtStop}; no order, forecast or guaranteed execution.`;
   if (name === "research_notebook") return `VigilAlpha research notebook: ${data.candidates.length} candidate sheets; learning PAUSED; runtime import disabled. ${data.exportCommand}`;
   if (name === "setup_status") return `VigilAlpha ${data.configured ? "ready" : "needs setup"}; mode ${data.mode}; saved snapshots ${data.localData?.snapshotCount || 0}.`;
   if (name === "portfolio_review") return `VigilAlpha portfolio review at ${data.sourceCutoff || "unknown cutoff"}: ${data.summary?.totalValue ?? "unknown"} ${data.summary?.currency || ""}; signal ${data.signal}; risk veto ${data.riskVeto?.active ? "active" : "clear"}.`;

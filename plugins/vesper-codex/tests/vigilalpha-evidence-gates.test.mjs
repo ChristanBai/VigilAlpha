@@ -77,7 +77,10 @@ test("holding, strategy, decision and learning reviews explicitly request daily 
   };
   await holdingReview(service, "AAA", { range: "MAX" });
   await strategyReview(service, "AAA");
-  await decisionReview(service, null, "AAA", { record: false });
+  const reviewed = await decisionReview(service, null, "AAA", { record: false });
+  assert.equal(reviewed.decisionSheet.action, "WAIT");
+  assert.equal(reviewed.decisionSheet.symbol, "AAA");
+  assert.equal(reviewed.decisionSheet.executionAuthority, "NONE");
   await learningReview(service, {
     evaluatePending: async (load) => {
       const history = await load("AAA");

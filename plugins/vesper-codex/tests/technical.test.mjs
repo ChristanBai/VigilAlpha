@@ -37,4 +37,10 @@ test("runs a moving average backtest without hidden execution assumptions", () =
   assert.ok(Number.isFinite(result.totalReturn));
   assert.ok(result.equityCurve.length > 0);
   assert.match(result.disclaimer, /hypothetical/i);
+  assert.match(result.disclaimer, /same-close/i);
+  assert.equal(result.diagnosticOnly, true);
+  let high = result.initialCapital;
+  let worst = 0;
+  for (const point of result.equityCurve) { high = Math.max(high, point.value); worst = Math.min(worst, (point.value - high) / high); }
+  assert.equal(result.maxDrawdown, worst);
 });

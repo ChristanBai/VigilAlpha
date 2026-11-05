@@ -97,8 +97,7 @@ export function movingAverageBacktest(bars, { fast = 20, slow = 50, initialCapit
 
   const finalValue = cash + units * Number(bars.at(-1).close);
   const totalReturn = (finalValue - initialCapital) / initialCapital;
-  const peak = equityCurve.reduce((max, point) => Math.max(max, point.value), initialCapital);
-  const trough = equityCurve.reduce((min, point) => Math.min(min, point.value), peak);
+  const chronologicalDrawdown = maxDrawdown([initialCapital, ...equityCurve.map((point) => point.value)]);
   const completed = trades.filter((trade) => trade.side === "SELL");
   const wins = completed.filter((trade) => trade.pnlPercent > 0).length;
 
@@ -107,12 +106,14 @@ export function movingAverageBacktest(bars, { fast = 20, slow = 50, initialCapit
     initialCapital,
     finalValue,
     totalReturn,
-    maxDrawdown: peak ? (trough - peak) / peak : 0,
+    maxDrawdown: chronologicalDrawdown,
     tradeCount: completed.length,
     winRate: completed.length ? wins / completed.length : null,
     trades,
     equityCurve,
-    disclaimer: "Backtests are hypothetical and exclude taxes, spreads, and execution uncertainty."
+    diagnosticOnly: true,
+    executionAssumption: "Signals and fills use the same close; not a realistic or independently validated execution model.",
+    disclaimer: "DIAGNOSTIC ONLY hypothetical backtest: same-close signal and fill can be unrealistic; excludes all fees, FX, taxes, spreads and execution uncertainty. Not evidence of profitability or a trading decision."
   };
 }
 

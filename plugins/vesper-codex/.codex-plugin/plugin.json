@@ -1,6 +1,6 @@
 {
   "name": "vigilalpha-codex",
-  "version": "0.1.0-dev.16",
+  "version": "0.1.0-dev.18",
   "description": "Local-first, read-only Trading 212 portfolio risk intelligence in Codex.",
   "author": {
     "name": "ChristanBai",

@@ -2,6 +2,7 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { calculateTradeReview } from "../src/runtime.mjs";
 import { createRuntime } from "../src/runtime.mjs";
+import { cloudPushUrl, pushCloudSnapshot } from "../src/core/cloud-transport.mjs";
 
 const runtime = await createRuntime();
 const cloudUrl = process.env.VESPER_CLOUD_URL || runtime.config.cloud.url;
@@ -14,6 +15,10 @@ if (runtime.config.cloud.syncEnabled === false && !process.env.VESPER_CLOUD_URL)
 }
 if (!cloudUrl) fail("VESPER_CLOUD_URL is required.");
 if (!token) fail("VESPER_DASHBOARD_TOKEN is required.");
+let destination;
+try {
+  destination = cloudPushUrl(cloudUrl, { allowInsecureLoopback: process.env.VESPER_ALLOW_HTTP_LOOPBACK === "1" });
+} catch (error) { fail(error.message); }
 
 do {
   try {
@@ -33,22 +38,13 @@ do {
       trades[symbol] = calculateTradeReview(snapshot.orders, snapshot.positions, symbol);
     }
 
-    const response = await fetch(new URL("/api/push", cloudUrl), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
+    const result = await pushCloudSnapshot(destination, token, {
         source: "local-keychain-proxy",
         snapshot,
         brief,
         histories,
         trades
-      })
     });
-    if (!response.ok) throw new Error(`Cloud dashboard returned HTTP ${response.status}`);
-    const result = await response.json();
     console.log(`[${new Date().toISOString()}] pushed snapshot: ${result.pushedAt}`);
   } catch (error) {
     console.error(`[${new Date().toISOString()}] sync failed: ${error.message}`);

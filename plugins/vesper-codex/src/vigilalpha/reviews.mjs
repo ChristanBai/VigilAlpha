@@ -3,6 +3,7 @@ import { calculateIndicators } from "../analysis/technical.mjs";
 import { calculateTradeReview, tradeMarkers } from "../runtime.mjs";
 import { evaluateStrategies } from "./strategies.mjs";
 import { buildShadowDecision } from "./decision.mjs";
+import { buildDecisionSheet } from "./decision-sheet.mjs";
 import { PATTERN_SPECS, patternRegistry } from "./research.mjs";
 import { validatePattern } from "./validation.mjs";
 import { conditionalPatterns } from "./conditional-patterns.mjs";
@@ -197,15 +198,19 @@ export async function decisionReview(service, shadowStore, symbol, { refresh = t
     sourceCutoff: snapshot.syncedAt || null
   });
   const recorded = record ? await shadowStore.append(decision) : null;
+  const holding = publicPosition({ ...position, weightPercent });
+  const marketEvidence = history ? { status: "AVAILABLE", source: history.source || "unknown", cutoff: history.bars?.at(-1)?.time || null } : { status: "UNAVAILABLE", reason: marketError };
+  const historyCompleteness = snapshot.historyCompleteness?.orders || { status: "UNKNOWN", complete: false };
   return {
     product: "VigilAlpha",
     reviewVersion: "vigilalpha.decision-review.v1",
-    holding: publicPosition({ ...position, weightPercent }),
-    marketEvidence: history ? { status: "AVAILABLE", source: history.source || "unknown", cutoff: history.bars?.at(-1)?.time || null } : { status: "UNAVAILABLE", reason: marketError },
+    holding,
+    marketEvidence,
     riskVeto,
     strategyConsensus: strategy.consensus,
-    historyCompleteness: snapshot.historyCompleteness?.orders || { status: "UNKNOWN", complete: false },
+    historyCompleteness,
     decision,
+    decisionSheet: buildDecisionSheet({ symbol: normalized, holding, marketEvidence, riskVeto, strategyConsensus: strategy.consensus, historyCompleteness, decision }),
     recordedAt: recorded?.recordedAt || null
   };
 }

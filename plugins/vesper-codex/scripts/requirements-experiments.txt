@@ -1,0 +1,9 @@
+# Optional research environment; not needed by the Node MCP server.
+# Install torch==2.5.1 separately: CPU wheel on Linux, native wheel on macOS.
+numpy==2.3.5
+pandas==2.2.3
+einops==0.8.1
+huggingface_hub==0.33.1
+safetensors==0.6.2
+tqdm==4.67.1
+exchange_calendars==4.11.2

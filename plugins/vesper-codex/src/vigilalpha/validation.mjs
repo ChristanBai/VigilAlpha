@@ -1,6 +1,6 @@
 import { relativeStrengthIndex, simpleMovingAverage } from "../analysis/technical.mjs";
 
-export const VALIDATION_VERSION = "vigilalpha.walk-forward.v2";
+export const VALIDATION_VERSION = "vigilalpha.walk-forward.v3";
 export const DEFAULT_COST_ASSUMPTIONS = Object.freeze({
   version: "vigilalpha.costs.2026-10-08",
   commissionBps: 0,
@@ -38,6 +38,13 @@ export function validatePattern(pattern, bars, { costs = DEFAULT_COST_ASSUMPTION
   if (normalized.length < Math.max(lookback + 20, 60)) {
     return unavailable(pattern, normalized.length, "INSUFFICIENT_HISTORY", costs);
   }
+  // Never substitute a later close for the prespecified next-open fill.
+  if (normalized.some((bar) => bar.open === null)) {
+    return unavailable(pattern, normalized.length, "OPEN_PRICE_UNAVAILABLE", costs);
+  }
+  if (pattern.id === "volume-breakout-20" && normalized.some((bar) => bar.high === null)) {
+    return unavailable(pattern, normalized.length, "HIGH_PRICE_UNAVAILABLE", costs);
+  }
   if (pattern.id === "volume-breakout-20" && normalized.some((bar) => bar.volume === null)) {
     return unavailable(pattern, normalized.length, "VOLUME_UNAVAILABLE", costs);
   }
@@ -67,7 +74,7 @@ export function validatePattern(pattern, bars, { costs = DEFAULT_COST_ASSUMPTION
     status: outOfSample.evaluatedBars >= 20 ? "EVALUATED" : "INSUFFICIENT_OUT_OF_SAMPLE",
     maturityEffect: "NONE_WITHOUT_SHADOW_AND_HUMAN_APPROVAL",
     split: { method: "expanding-window-walk-forward", initialTrainEnd: normalized[firstTest]?.time || null, randomShuffle: false, foldCount: folds.length },
-    execution: { timing: "next_bar_open_or_close", futureDataUsed: false },
+    execution: { timing: "next_bar_open", missingOpenPolicy: "BLOCK_DATASET", futureDataUsed: false },
     costs,
     inSample,
     folds,
@@ -93,10 +100,11 @@ function simulate(pattern, bars, start, end, costs) {
   for (let index = pattern.lookback; index < start; index += 1) desired = evaluatePatternSignal(pattern, bars, index, desired);
   for (let index = Math.max(start, pattern.lookback); index < end; index += 1) {
     desired = evaluatePatternSignal(pattern, bars, index, desired);
-    const execution = finite(bars[index + 1].open) ?? bars[index + 1].close;
+    const execution = bars[index + 1].open;
     if (desired === 1 && units === 0) {
       const rate = costRate(costs);
-      units = cash * (1 - rate) / execution;
+      // Fee is a proportion of executed notional, paid from the same cash.
+      units = cash / (execution * (1 + rate));
       cash = 0;
       tradeCount += 1;
     } else if (desired === 0 && units > 0) {
@@ -145,12 +153,12 @@ export function evaluatePatternSignal(pattern, bars, index, previous) {
 }
 
 function buyAndHold(bars, start, end, costs) {
-  const first = bars[Math.min(start + 1, bars.length - 1)]?.open ?? bars[Math.min(start + 1, bars.length - 1)]?.close;
+  const first = bars[Math.min(start + 1, bars.length - 1)]?.open;
   const last = bars[Math.min(end, bars.length - 1)]?.close;
   if (!Number.isFinite(first) || !Number.isFinite(last) || first <= 0) return { name: "buy_and_hold", return: null, netReturn: null };
   const grossReturn = last / first - 1;
   return { name: "buy_and_hold", return: grossReturn, grossReturn,
-    netReturn: (1 - costRate(costs)) * last / first - 1,
+    netReturn: last / (first * (1 + costRate(costs))) - 1,
     costsIncluded: true, entryCostRate: costRate(costs), terminalLiquidation: false };
 }
 

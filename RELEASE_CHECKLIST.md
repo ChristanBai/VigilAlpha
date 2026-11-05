@@ -1,3 +1,23 @@
+# VigilAlpha dev.18 publication gates — 2026-11-06
+
+- [x] Package, plugin manifest, MCP initialize and setup status identify `0.1.0-dev.18` from one checked runtime constant.
+- [x] Source syntax, Node tests and Python contract/accounting tests pass without broker writes.
+- [x] Trading 212 browser is authenticated in Practice mode; the observed account has no holdings, so no portfolio or holding decision is claimed.
+- [x] Practice verification remains read-only: no simulated order, account reset or broker setting change was performed.
+- [x] Release builder includes the macOS installer, all dev.18 research modules, third-party licenses and an internal file checksum manifest.
+- [ ] Exact committed clean clone and independently extracted release archive repeat all checks.
+- [ ] Current tree and reachable Git history pass privacy/secret review.
+- [ ] Hosted CI passes on the published commit.
+- [ ] GitHub prerelease contains the ZIP and SHA-256 asset; independent download, checksum and startup pass.
+- [ ] Current Codex desktop process reports dev.18 after installing the published asset.
+- [ ] General financial effectiveness, complete corporate-action data and prospective samples remain unaccepted.
+
+Software publication does not establish a return guarantee. A 1.2 return target is not a release gate
+until its exact metric, horizon, benchmark, cash-flow treatment and loss limits are frozen and tested
+out of sample after all costs.
+
+---
+
 # VigilAlpha dev.16 validation integrity — 2026-10-25
 
 - [x] Analytic continuous-path/fee-comparison, cross-fold peak, future-date and invalid-input regressions.

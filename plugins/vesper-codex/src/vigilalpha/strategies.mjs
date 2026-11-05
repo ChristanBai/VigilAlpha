@@ -223,7 +223,9 @@ function insufficient(name, version, data, reason, maturity = "experimental", pa
 function summarizeBacktest(backtest) {
   if (!backtest) return { status: "NOT_RUN", costsIncluded: false, outOfSample: "NOT_AVAILABLE" };
   return {
-    status: "IN_SAMPLE_ONLY",
+    status: "DIAGNOSTIC_ONLY_SAME_CLOSE_NO_COSTS",
+    diagnosticOnly: true,
+    limitations: backtest.disclaimer,
     range: null,
     totalReturn: backtest.totalReturn,
     maxDrawdown: backtest.maxDrawdown,

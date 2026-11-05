@@ -1,0 +1,48 @@
+{
+  "sourceCommit": "67b630e67f6a18c9e9be918d9b4337c960db1e9a",
+  "files": [
+    {
+      "repo": "NeoQuasar/Kronos-small",
+      "revision": "901c26c1332695a2a8f243eb2f37243a37bea320",
+      "file": "config.json",
+      "sha256": "5e0f6a605d5f81b5c9b559fe5cf716a1acb041c744e6f41bd05b097b7a685396",
+      "bytes": 228
+    },
+    {
+      "repo": "NeoQuasar/Kronos-small",
+      "revision": "901c26c1332695a2a8f243eb2f37243a37bea320",
+      "file": "model.safetensors",
+      "sha256": "b082dfcbd8e8c142a725c8bbb99781802f38fec81210e13479effb32b3c3e020",
+      "bytes": 98980656
+    },
+    {
+      "repo": "NeoQuasar/Kronos-small",
+      "revision": "901c26c1332695a2a8f243eb2f37243a37bea320",
+      "file": "README.md",
+      "sha256": "33ba1550110c020dc30da869c91a65749009af7671dff0dce98fc0a914f3fc04",
+      "bytes": 8855
+    },
+    {
+      "repo": "NeoQuasar/Kronos-Tokenizer-base",
+      "revision": "0e0117387f39004a9016484a186a908917e22426",
+      "file": "config.json",
+      "sha256": "2366e7ccfec76cbc19cf3c4c1b9c5d901be336ca1e83f2d2292c9bff381b77a2",
+      "bytes": 301
+    },
+    {
+      "repo": "NeoQuasar/Kronos-Tokenizer-base",
+      "revision": "0e0117387f39004a9016484a186a908917e22426",
+      "file": "model.safetensors",
+      "sha256": "59d85f6af76a2c3b8240ea06cb21db4213b4eeca053f246b23e29cf832fc6bee",
+      "bytes": 15842368
+    },
+    {
+      "repo": "NeoQuasar/Kronos-Tokenizer-base",
+      "revision": "0e0117387f39004a9016484a186a908917e22426",
+      "file": "README.md",
+      "sha256": "24d59758e911d355a79608b6686610a14f649270d6d852f3d86b2a1e8232ce89",
+      "bytes": 8863
+    }
+  ],
+  "weightsBundled": false
+}
